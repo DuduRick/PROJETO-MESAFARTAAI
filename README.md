@@ -5,5 +5,7 @@ O MESAFARTAI é um chatbot em Python que conecta doadores de alimentos (supermer
 O projeto está alinhado à ODS 2 da ONU (Fome Zero e Agricultura Sustentável), pois ataca o principal gargalo do combate à fome: não falta comida, falta logística ágil e comunicação eficiente. Ao direcionar alimentos próprios para consumo, que seriam descartados, a famílias em situação de vulnerabilidade, o sistema amplia o acesso à alimentação (meta 2.1) e reduz o desperdício.
 
 Eduardo Henrique Faria da Silva - 160361
+
 Kaio Henrique Paes de Barros - 157877
+
 Andre de Oliveira Pinheiro - 146010
