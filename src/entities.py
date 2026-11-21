@@ -134,6 +134,9 @@ _RE_NOME_GATILHO = re.compile(
     r"(?:meu\s+nome\s*(?:é|e|eh|:)?|me\s+chamo|chamo-me|nome\s*:|aqui\s+(?:é|e|eh)|(?:eu\s+)?sou)\s+"
     r"(?:(?:o|a)\s+)?(?P<resto>[^,.;!?\n@\d]{2,60})", re.IGNORECASE)
 _RE_CUE_VALIDADE = re.compile(r"venc\w*|validade|v[aá]lid[oa]|expir\w*|bom\s+at[eé]|consumir\s+at[eé]|val\.", re.IGNORECASE)
+# [AC-4] "para doar amanhã" / "para doar hoje": o doador só pode entregar nesse prazo, então tratamos
+# a data como prazo de urgência (mesma classificação ALTA/MÉDIA). "posso doar hoje" continua ignorado.
+_RE_PRAZO_DOACAO = re.compile(r"\bpara\s+doar\s+(?:at[eé]\s+)?(?:hoje|amanh[ãa])\b", re.IGNORECASE)
 _RE_PERTO_VENC = re.compile(r"(?:perto|pr[oó]ximo|prestes)\s+(?:d?o\s+|a\s+|ao\s+)?(?:vencimento|vencer)", re.IGNORECASE)
 
 
@@ -461,9 +464,10 @@ class ExtratorEntidades:
             if perto and (not cue or perto.start() <= cue.start() < perto.end()):
                 res["validade_texto"] = "perto do vencimento"  # sem data exata
                 return res
-            if not cue:
+            prazo = _RE_PRAZO_DOACAO.search(texto)
+            if not cue and not prazo:
                 return res
-            janela = texto[cue.start(): cue.end() + 50]
+            janela = texto[cue.start(): cue.end() + 50] if cue else texto[prazo.start(): prazo.end()]
 
         t = remover_acentos(janela.lower())
         data, trecho = None, None

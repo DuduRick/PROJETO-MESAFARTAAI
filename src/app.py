@@ -121,6 +121,18 @@ def pagina_doar(s):
             with st.chat_message(m["role"], avatar="🍽️" if m["role"] == "assistant" else "🙂"):
                 st.markdown(m["content"])
 
+        # [AC-4] Indicador visual de confiança da classificação NLU (da última mensagem)
+        nlu = conversa.ultima_nlu
+        if nlu:
+            confianca = min(max(nlu["confianca"], 0.0), 1.0)
+            st.progress(confianca, text=f"Confiança da IA (NLU): {confianca * 100:.1f}%"
+                                        f" · intenção: {nlu['intencao']}")
+
+        # o toast é guardado no enviar() e exibido aqui, depois do st.rerun() (senão o rerun o descarta)
+        if "_toast" in st.session_state:
+            mensagem, icone = st.session_state.pop("_toast")
+            st.toast(mensagem, icon=icone)
+
         botoes = conversa.botoes()
         if botoes:
             colunas = st.columns(len(botoes))
@@ -136,10 +148,17 @@ def pagina_doar(s):
 def enviar(conversa, texto):
     with st.chat_message("user", avatar="🙂"):
         st.markdown(texto)
+    protocolo_antes = conversa.protocolo
     with st.spinner("Pensando..."):
         conversa.enviar(texto)
-    # [NOVO AJUSTE - LAYOUT/UX] Feedback instantâneo ao processar mensagem
-    st.toast("Mensagem processada pelo assistente!", icon="🍽️")
+    # [AC-4] Feedback rápido: registrada no banco / não entendida (nada gravado) / mensagem comum
+    nlu = conversa.ultima_nlu
+    if conversa.protocolo and conversa.protocolo != protocolo_antes:
+        st.session_state["_toast"] = ("Doação processada e registrada no banco!", "🍲")
+    elif nlu and nlu["fallback"]:
+        st.session_state["_toast"] = ("Não entendi o pedido — nada foi gravado.", "❓")
+    else:
+        st.session_state["_toast"] = ("Mensagem processada pelo assistente!", "🍽️")
     st.rerun()
 
 

@@ -115,6 +115,7 @@ class Conversa:
         self.contexto = contexto_geografico
         self.protocolo = ""
         self.mensagens = []
+        self.ultima_nlu = None       # {"intencao", "confianca", "fallback"} da última mensagem classificada
         self._zerar_fluxo()
         self._dizer(
             "Olá! Eu sou o assistente do **MESAFARTAI** 🍽️, que conecta quem tem alimentos para doar às ONGs "
@@ -154,6 +155,7 @@ class Conversa:
         if not texto:
             return
         self.mensagens.append({"role": "user", "content": texto})
+        self.ultima_nlu = None  # só fica preenchido quando o NLU classificou ESTA mensagem
         if self.etapa != "inicio" and _RE_CANCELAR.match(texto):
             self._zerar_fluxo()
             self._dizer("Tudo bem, cancelei este atendimento. Nenhum dado foi salvo. "
@@ -177,6 +179,8 @@ class Conversa:
     def _etapa_inicio(self, texto):
         resultado = self.nlu.processar_mensagem(texto)
         intencao = resultado["intencao"]
+        self.ultima_nlu = {"intencao": intencao, "confianca": float(resultado["confianca"]),
+                           "fallback": bool(resultado["fallback"])}
         extraido = self.ex.processar_texto(texto)
         protocolo = RE_PROTOCOLO.search(texto)
 
